@@ -226,7 +226,6 @@
 						<include>**/*Tests.java</include>
 						<include>**/*Test.java</include>
 					</includes>
-					<reuseForks>false</reuseForks>
 					<systemProperties>
 						<gemfire.disableShutdownHook>true</gemfire.disableShutdownHook>
 						<javax.net.ssl.keyStore>${basedir}/src/test/resources/trusted.keystore</javax.net.ssl.keyStore>
@@ -251,23 +250,6 @@
 
 		</plugins>
 	</build>
-
-	<profiles>
-		<profile>
-			<id>release</id>
-			<build>
-				<plugins>
-				
-					<plugin>
-						<groupId>org.jfrog.buildinfo</groupId>
-						<artifactId>artifactory-maven-plugin</artifactId>
-						<inherited>false</inherited>
-					</plugin>
-					
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 
 	<repositories>
 		<repository>
