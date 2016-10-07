@@ -20,17 +20,20 @@ import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.hamcrest.core.IsNot.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Arrays;
 
+import org.junit.Assume;
 import org.junit.Test;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.ReactiveListCommands.PopResult;
 import org.springframework.data.redis.connection.ReactiveListCommands.PushCommand;
 import org.springframework.data.redis.connection.RedisListCommands.Position;
 
+import org.springframework.data.redis.test.util.LettuceRedisClientProvider;
 import reactor.core.publisher.Mono;
 
 /**
@@ -254,6 +257,8 @@ public class LettuceReactiveListCommandTests extends LettuceReactiveCommandsTest
 	@Test
 	public void blPopShouldReturnFirstAvailable() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+
 		nativeCommands.rpush(KEY_1, VALUE_1, VALUE_2, VALUE_3);
 
 		PopResult result = connection.listCommands()
@@ -297,6 +302,8 @@ public class LettuceReactiveListCommandTests extends LettuceReactiveCommandsTest
 	 */
 	@Test
 	public void brPopLPushShouldWorkCorrectly() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.rpush(KEY_1, VALUE_1, VALUE_2, VALUE_3);
 		nativeCommands.rpush(KEY_2, VALUE_1);

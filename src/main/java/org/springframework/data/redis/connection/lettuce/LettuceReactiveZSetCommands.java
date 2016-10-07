@@ -99,7 +99,7 @@ public class LettuceReactiveZSetCommands implements ReactiveZSetCommands {
 					}
 				}
 
-				ScoredValue<byte[]>[] values = command.getTuples().stream()
+				ScoredValue<byte[]>[] values = (ScoredValue<byte[]>[]) command.getTuples().stream()
 						.map(tuple -> new ScoredValue<byte[]>(tuple.getScore(), tuple.getValue()))
 						.toArray(size -> new ScoredValue[size]);
 
@@ -544,4 +544,7 @@ public class LettuceReactiveZSetCommands implements ReactiveZSetCommands {
 		return args;
 	}
 
+	protected LettuceReactiveRedisConnection getConnection() {
+		return connection;
+	}
 }

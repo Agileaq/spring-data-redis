@@ -17,10 +17,12 @@ package org.springframework.data.redis.connection.lettuce;
 
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.springframework.data.redis.test.util.LettuceRedisClientProvider;
 
 /**
  * @author Christoph Strobl
@@ -66,6 +68,8 @@ public class LettuceReactiveHyperLogLogCommandsTests extends LettuceReactiveComm
 	@Test
 	public void pfCountWithMultipleKeysShouldReturnCorrectly() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+
 		nativeCommands.pfadd(KEY_1, new String[] { VALUE_1, VALUE_2 });
 		nativeCommands.pfadd(KEY_2, new String[] { VALUE_2, VALUE_3 });
 
@@ -77,6 +81,8 @@ public class LettuceReactiveHyperLogLogCommandsTests extends LettuceReactiveComm
 	 */
 	@Test
 	public void pfMergeShouldWorkCorrectly() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.pfadd(KEY_1, new String[] { VALUE_1, VALUE_2 });
 		nativeCommands.pfadd(KEY_2, new String[] { VALUE_2, VALUE_3 });

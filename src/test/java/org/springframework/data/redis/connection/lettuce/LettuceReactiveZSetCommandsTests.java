@@ -17,6 +17,7 @@ package org.springframework.data.redis.connection.lettuce;
 
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -25,6 +26,7 @@ import org.hamcrest.collection.IsIterableContainingInOrder;
 import org.junit.Test;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.DefaultTuple;
+import org.springframework.data.redis.test.util.LettuceRedisClientProvider;
 
 /**
  * @author Christoph Strobl
@@ -503,6 +505,8 @@ public class LettuceReactiveZSetCommandsTests extends LettuceReactiveCommandsTes
 	@Test
 	public void zUnionStoreShouldWorkCorrectly() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+
 		nativeCommands.zadd(KEY_1, 1D, VALUE_1);
 		nativeCommands.zadd(KEY_1, 2D, VALUE_2);
 		nativeCommands.zadd(KEY_2, 1D, VALUE_1);
@@ -520,6 +524,8 @@ public class LettuceReactiveZSetCommandsTests extends LettuceReactiveCommandsTes
 	 */
 	@Test
 	public void zInterStoreShouldWorkCorrectly() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.zadd(KEY_1, 1D, VALUE_1);
 		nativeCommands.zadd(KEY_1, 2D, VALUE_2);

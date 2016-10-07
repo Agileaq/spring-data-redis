@@ -404,4 +404,8 @@ public class LettuceReactiveStringCommands implements ReactiveStringCommands {
 			});
 		});
 	}
+
+	protected LettuceReactiveRedisConnection getConnection() {
+		return connection;
+	}
 }

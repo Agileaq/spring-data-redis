@@ -20,6 +20,7 @@ import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.hamcrest.core.IsNull.*;
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeThat;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -37,6 +38,7 @@ import org.springframework.data.redis.connection.ReactiveStringCommands.SetComma
 import org.springframework.data.redis.connection.RedisStringCommands.BitOperation;
 import org.springframework.data.redis.core.types.Expiration;
 
+import org.springframework.data.redis.test.util.LettuceRedisClientProvider;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.TestSubscriber;
@@ -279,6 +281,8 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	@Test
 	public void mSetNXShouldAddMultipleKeyValueParis() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+
 		Map<ByteBuffer, ByteBuffer> map = new LinkedHashMap<>();
 		map.put(KEY_1_BBUFFER, VALUE_1_BBUFFER);
 		map.put(KEY_2_BBUFFER, VALUE_2_BBUFFER);
@@ -294,6 +298,8 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	 */
 	@Test
 	public void mSetNXShouldNotAddMultipleKeyValueParisWhenAlreadyExit() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.set(KEY_2, VALUE_2);
 
@@ -392,6 +398,8 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	@Test
 	public void bitOpAndShouldWorkAsExpected() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+
 		nativeCommands.set(KEY_1, VALUE_1);
 		nativeCommands.set(KEY_2, VALUE_2);
 
@@ -405,6 +413,8 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	 */
 	@Test
 	public void bitOpOrShouldWorkAsExpected() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.set(KEY_1, VALUE_1);
 		nativeCommands.set(KEY_2, VALUE_2);
@@ -420,6 +430,8 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	@Test(expected = IllegalArgumentException.class)
 	public void bitNotShouldThrowExceptionWhenMoreThanOnSourceKey() {
 
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
+		
 		connection.stringCommands().bitOp(Arrays.asList(KEY_1_BBUFFER, KEY_2_BBUFFER), BitOperation.NOT, KEY_3_BBUFFER)
 				.block();
 	}

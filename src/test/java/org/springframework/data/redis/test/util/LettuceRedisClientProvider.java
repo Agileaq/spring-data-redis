@@ -31,8 +31,14 @@ public class LettuceRedisClientProvider extends ExternalResource {
 	RedisClient client;
 
 	@Override
-	protected void before() throws Throwable {
-		super.before();
+	protected void before()  {
+
+		try {
+			super.before();
+		} catch (Throwable throwable) {
+			throwable.printStackTrace();
+		}
+
 		client = RedisClient.create(RedisURI.builder().withHost(host).withPort(port).build());
 	}
 
@@ -43,7 +49,17 @@ public class LettuceRedisClientProvider extends ExternalResource {
 	}
 
 	public RedisClient getClient() {
+		if(client == null) {
+			before();
+		}
 		return client;
+	}
+
+	public void destroy() {
+
+		if(client != null) {
+			after();
+		}
 	}
 
 	public static LettuceRedisClientProvider local() {

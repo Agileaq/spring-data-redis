@@ -288,4 +288,8 @@ public class LettuceReactiveListCommands implements ReactiveListCommands {
 			});
 		});
 	}
+
+	protected LettuceReactiveRedisConnection getConnection() {
+		return connection;
+	}
 }

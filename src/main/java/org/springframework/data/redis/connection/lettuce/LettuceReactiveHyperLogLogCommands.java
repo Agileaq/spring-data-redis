@@ -99,4 +99,7 @@ public class LettuceReactiveHyperLogLogCommands implements ReactiveHyperLogLogCo
 		});
 	}
 
+	protected LettuceReactiveRedisConnection getConnection() {
+		return connection;
+	}
 }

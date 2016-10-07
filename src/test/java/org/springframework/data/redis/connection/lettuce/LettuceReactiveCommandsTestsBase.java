@@ -15,23 +15,37 @@
  */
 package org.springframework.data.redis.connection.lettuce;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assume.assumeThat;
+
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 
+import com.lambdaworks.redis.AbstractRedisClient;
+import com.lambdaworks.redis.cluster.RedisClusterClient;
+import com.lambdaworks.redis.cluster.api.sync.RedisClusterCommands;
+import org.hamcrest.core.Is;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.springframework.data.redis.test.util.LettuceRedisClientProvider;
 
 import com.lambdaworks.redis.RedisClient;
 import com.lambdaworks.redis.api.sync.RedisCommands;
+import org.springframework.data.redis.test.util.LettuceRedisClusterClientProvider;
 
 /**
  * @author Christoph Strobl
  */
+@RunWith(Parameterized.class)
 public class LettuceReactiveCommandsTestsBase {
 
-	public static @ClassRule LettuceRedisClientProvider clientProvider = LettuceRedisClientProvider.local();
+	// public static @ClassRule LettuceRedisClientProvider clientProvider = LettuceRedisClientProvider.local();
 
 	static final String KEY_1 = "key-1";
 	static final String KEY_2 = "key-2";
@@ -56,23 +70,49 @@ public class LettuceReactiveCommandsTestsBase {
 	static final ByteBuffer KEY_3_BBUFFER = ByteBuffer.wrap(KEY_3_BYTES);
 	static final ByteBuffer VALUE_3_BBUFFER = ByteBuffer.wrap(VALUE_3_BYTES);
 
+	@Parameterized.Parameter(value = 0) public Object clientProvider;
+
 	LettuceReactiveRedisConnection connection;
-	RedisCommands<String, String> nativeCommands;
+	RedisClusterCommands<String, String> nativeCommands;
+
+	@Parameterized.Parameters
+	public static List<Object> parameters() {
+		return Arrays.asList(LettuceRedisClientProvider.local(), LettuceRedisClusterClientProvider.local());
+	}
 
 	@Before
 	public void setUp() {
 
-		RedisClient client = clientProvider.getClient();
-		nativeCommands = client.connect().sync();
-		connection = new LettuceReactiveRedisConnection(client);
+		AbstractRedisClient abstractRedisClient = null;
+		if (clientProvider instanceof LettuceRedisClientProvider) {
+			abstractRedisClient = ((LettuceRedisClientProvider) clientProvider).getClient();
+		} else if (clientProvider instanceof LettuceRedisClusterClientProvider) {
+			abstractRedisClient = ((LettuceRedisClusterClientProvider) clientProvider).getClient();
+			assumeThat(((LettuceRedisClusterClientProvider) clientProvider).test(), is(true));
+		}
+
+		if (abstractRedisClient instanceof RedisClient) {
+			nativeCommands = ((RedisClient) abstractRedisClient).connect().sync();
+			connection = new LettuceReactiveRedisConnection(abstractRedisClient);
+
+		} else if (abstractRedisClient instanceof RedisClusterClient) {
+			nativeCommands = ((RedisClusterClient) abstractRedisClient).connect().sync();
+			connection = new LettuceReactiveRedisClusterConnection((RedisClusterClient) abstractRedisClient);
+		}
+
 	}
 
 	@After
 	public void tearDown() {
 
-		flushAll();
-		nativeCommands.close();
-		connection.close();
+		if (nativeCommands != null) {
+			flushAll();
+			nativeCommands.close();
+		}
+
+		if (connection != null) {
+			connection.close();
+		}
 	}
 
 	private void flushAll() {

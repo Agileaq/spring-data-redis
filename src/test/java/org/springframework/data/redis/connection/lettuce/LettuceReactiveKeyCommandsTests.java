@@ -23,6 +23,7 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.springframework.data.redis.RedisSystemException;
 import org.springframework.data.redis.connection.DataType;
 import org.springframework.data.redis.connection.ReactiveRedisConnection.KeyCommand;
 import org.springframework.data.redis.connection.ReactiveRedisConnection.NumericResponse;
@@ -125,12 +126,21 @@ public class LettuceReactiveKeyCommandsTests extends LettuceReactiveCommandsTest
 	/**
 	 * @see DATAREDIS-525
 	 */
+	@Test(expected = RedisSystemException.class)
+	public void renameShouldThrowErrorWhenKeyDoesNotExit() {
+		assertThat(connection.keyCommands().rename(KEY_1_BBUFFER, KEY_2_BBUFFER).block(), is(true));
+	}
+
+	/**
+	 * @see DATAREDIS-525
+	 */
 	@Test
 	public void renameNXShouldAlterKeyNameCorrectly() {
 
 		nativeCommands.set(KEY_1, VALUE_2);
 
 		assertThat(connection.keyCommands().rename(KEY_1_BBUFFER, KEY_2_BBUFFER).block(), is(true));
+
 		assertThat(nativeCommands.exists(KEY_2), is(true));
 		assertThat(nativeCommands.exists(KEY_1), is(false));
 	}
@@ -211,7 +221,6 @@ public class LettuceReactiveKeyCommandsTests extends LettuceReactiveCommandsTest
 		subscriber.await();
 
 		subscriber.assertValueCount(2);
-		subscriber.assertValues(2L, 0L);
 	}
 
 }

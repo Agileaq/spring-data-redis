@@ -312,4 +312,8 @@ public class LettuceReactiveSetCommands implements ReactiveSetCommands {
 			});
 		});
 	}
+
+	protected LettuceReactiveRedisConnection getConnection() {
+		return connection;
+	}
 }
