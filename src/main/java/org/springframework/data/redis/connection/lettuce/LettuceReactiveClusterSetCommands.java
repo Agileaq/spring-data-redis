@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
+import org.springframework.data.redis.connection.ReactiveClusterSetCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
 
 import reactor.core.publisher.Flux;
@@ -33,7 +34,7 @@ import rx.Observable;
  * @author Christoph Strobl
  * @since 2.0
  */
-public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommands {
+public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommands implements ReactiveClusterSetCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveSetCommands}.

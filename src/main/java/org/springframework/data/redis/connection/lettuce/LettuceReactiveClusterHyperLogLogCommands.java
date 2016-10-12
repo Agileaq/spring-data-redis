@@ -23,6 +23,7 @@ import java.util.List;
 import org.reactivestreams.Publisher;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
+import org.springframework.data.redis.connection.ReactiveClusterHyperLogLogCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
 
 import reactor.core.publisher.Flux;
@@ -32,7 +33,7 @@ import reactor.core.publisher.Mono;
  * @author Christoph Strobl
  * @since @since 2.0
  */
-public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHyperLogLogCommands {
+public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHyperLogLogCommands implements ReactiveClusterHyperLogLogCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveHyperLogLogCommands}.

@@ -431,7 +431,7 @@ public class LettuceReactiveStringCommandsTests extends LettuceReactiveCommandsT
 	public void bitNotShouldThrowExceptionWhenMoreThanOnSourceKey() {
 
 		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
-		
+
 		connection.stringCommands().bitOp(Arrays.asList(KEY_1_BBUFFER, KEY_2_BBUFFER), BitOperation.NOT, KEY_3_BBUFFER)
 				.block();
 	}

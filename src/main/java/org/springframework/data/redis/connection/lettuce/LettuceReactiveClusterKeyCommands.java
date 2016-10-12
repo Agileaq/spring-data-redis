@@ -18,6 +18,7 @@ package org.springframework.data.redis.connection.lettuce;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.connection.ReactiveClusterKeyCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
 
 import com.lambdaworks.redis.RedisException;
@@ -30,7 +31,7 @@ import rx.Observable;
  * @author Christoph Strobl.
  * @since 2.0
  */
-public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommands {
+public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommands implements ReactiveClusterKeyCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveKeyCommands}.

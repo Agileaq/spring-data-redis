@@ -16,7 +16,7 @@
 
 package org.springframework.data.redis.connection.lettuce;
 
-import org.springframework.data.redis.connection.ReactiveSetCommands;
+import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
 
 import com.lambdaworks.redis.cluster.RedisClusterClient;
 
@@ -24,7 +24,8 @@ import com.lambdaworks.redis.cluster.RedisClusterClient;
  * @author Christoph Strobl
  * @since 2.0
  */
-public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisConnection {
+public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisConnection
+		implements ReactiveRedisClusterConnection {
 
 	public LettuceReactiveRedisClusterConnection(RedisClusterClient client) {
 		super(client);
@@ -41,7 +42,7 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 	}
 
 	@Override
-	public ReactiveSetCommands setCommands() {
+	public LettuceReactiveClusterSetCommands setCommands() {
 		return new LettuceReactiveClusterSetCommands(this);
 	}
 
@@ -58,5 +59,20 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 	@Override
 	public LettuceReactiveClusterStringCommands stringCommands() {
 		return new LettuceReactiveClusterStringCommands(this);
+	}
+
+	@Override
+	public LettuceReactiveClusterGeoCommands geoCommands() {
+		return new LettuceReactiveClusterGeoCommands(this);
+	}
+
+	@Override
+	public LettuceReactiveClusterHashCommands hashCommands() {
+		return new LettuceReactiveClusterHashCommands(this);
+	}
+
+	@Override
+	public LettuceReactiveClusterNumberCommands numberCommands() {
+		return new LettuceReactiveClusterNumberCommands(this);
 	}
 }

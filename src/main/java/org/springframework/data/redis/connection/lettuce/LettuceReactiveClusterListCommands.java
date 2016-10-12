@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
+import org.springframework.data.redis.connection.ReactiveClusterListCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
 
 import reactor.core.publisher.Flux;
@@ -30,7 +31,7 @@ import rx.Observable;
  * @author Christoph Strobl
  * @since 2016/10
  */
-public class LettuceReactiveClusterListCommands extends LettuceReactiveListCommands {
+public class LettuceReactiveClusterListCommands extends LettuceReactiveListCommands implements ReactiveClusterListCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveListCommands}.
