@@ -16,13 +16,19 @@
 
 package org.springframework.data.redis.connection.lettuce;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import org.reactivestreams.Publisher;
 import org.springframework.data.redis.RedisSystemException;
+import org.springframework.data.redis.connection.ClusterSlotHashUtil;
 import org.springframework.data.redis.connection.ReactiveClusterKeyCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
+import org.springframework.data.redis.connection.RedisClusterNode;
 
 import com.lambdaworks.redis.RedisException;
 
+import org.springframework.util.Assert;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rx.Observable;
@@ -31,15 +37,42 @@ import rx.Observable;
  * @author Christoph Strobl.
  * @since 2.0
  */
-public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommands implements ReactiveClusterKeyCommands {
+public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommands
+		implements ReactiveClusterKeyCommands {
+
+	private LettuceReactiveRedisClusterConnection connection;
 
 	/**
 	 * Create new {@link LettuceReactiveKeyCommands}.
 	 *
 	 * @param connection must not be {@literal null}.
 	 */
-	public LettuceReactiveClusterKeyCommands(LettuceReactiveRedisConnection connection) {
+	public LettuceReactiveClusterKeyCommands(LettuceReactiveRedisClusterConnection connection) {
+
 		super(connection);
+		this.connection = connection;
+	}
+
+	@Override
+	public Mono<List<ByteBuffer>> keys(RedisClusterNode node, ByteBuffer pattern) {
+
+		return connection.execute(node, cmd -> {
+
+			Assert.notNull(pattern, "Pattern must not be null!");
+
+			Observable<List<ByteBuffer>> result = cmd.keys(pattern.array()).map(ByteBuffer::wrap).toList();
+			return Flux.from(LettuceReactiveRedisConnection.<List<ByteBuffer>> monoConverter().convert(result));
+		}).next();
+	}
+
+	@Override
+	public Mono<ByteBuffer> randomKey(RedisClusterNode node) {
+
+		return connection.execute(node, cmd -> {
+
+			Observable<ByteBuffer> result = cmd.randomkey().map(ByteBuffer::wrap);
+			return Flux.from(LettuceReactiveRedisConnection.<ByteBuffer> monoConverter().convert(result));
+		}).next();
 	}
 
 	/*
@@ -49,9 +82,12 @@ public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommand
 	@Override
 	public Flux<ReactiveRedisConnection.BooleanResponse<RenameCommand>> rename(Publisher<RenameCommand> commands) {
 
-		return this.getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			if (command.getNewName().equals(command.getKey())) {
+			Assert.notNull(command.getKey(), "key must not be null.");
+			Assert.notNull(command.getNewName(), "NewName must not be null");
+
+			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKey(), command.getNewName())) {
 				return super.rename(Mono.just(command));
 			}
 
@@ -74,9 +110,12 @@ public class LettuceReactiveClusterKeyCommands extends LettuceReactiveKeyCommand
 	@Override
 	public Flux<ReactiveRedisConnection.BooleanResponse<RenameCommand>> renameNX(Publisher<RenameCommand> commands) {
 
-		return this.getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			if (command.getNewName().equals(command.getKey())) {
+			Assert.notNull(command.getKey(), "Key must not be null.");
+			Assert.notNull(command.getNewName(), "NewName must not be null");
+
+			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKey(), command.getNewName())) {
 				return super.renameNX(Mono.just(command));
 			}
 

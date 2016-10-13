@@ -179,8 +179,4 @@ public class LettuceReactiveKeyCommands implements ReactiveKeyCommands {
 			});
 		});
 	}
-
-	protected LettuceReactiveRedisConnection getConnection() {
-		return connection;
-	}
 }

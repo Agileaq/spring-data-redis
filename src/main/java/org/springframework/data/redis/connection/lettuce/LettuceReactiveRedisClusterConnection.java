@@ -16,9 +16,18 @@
 
 package org.springframework.data.redis.connection.lettuce;
 
+import com.lambdaworks.redis.api.StatefulConnection;
+import com.lambdaworks.redis.api.StatefulRedisConnection;
+import com.lambdaworks.redis.api.rx.RedisReactiveCommands;
+import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
+import com.lambdaworks.redis.cluster.api.rx.RedisClusterReactiveCommands;
 import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
 
 import com.lambdaworks.redis.cluster.RedisClusterClient;
+import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
+import reactor.core.publisher.Flux;
 
 /**
  * @author Christoph Strobl
@@ -74,5 +83,41 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 	@Override
 	public LettuceReactiveClusterNumberCommands numberCommands() {
 		return new LettuceReactiveClusterNumberCommands(this);
+	}
+
+	@Override
+	protected StatefulRedisClusterConnection<byte[], byte[]> getConnection() {
+
+		if(!(super.getConnection() instanceof StatefulRedisClusterConnection)) {
+			throw new IllegalArgumentException("o.O connection needs to be cluster compatible " + getConnection());
+		}
+
+		return (StatefulRedisClusterConnection)super.getConnection();
+	}
+
+	/**
+	 * @param callback
+	 * @return
+	 */
+	public <T> Flux<T> execute(RedisNode node, LettuceReactiveCallback<T> callback) {
+
+		return Flux.defer(() -> callback.doWithCommands(getCommands(node))).onErrorResumeWith(translateExecption());
+	}
+
+	protected RedisClusterReactiveCommands<byte[], byte[]> getCommands() {
+		return  getConnection().reactive();
+	}
+
+	protected RedisReactiveCommands<byte[], byte[]> getCommands(RedisNode node) {
+
+		if (!(getConnection() instanceof StatefulRedisClusterConnection)) {
+			throw new IllegalArgumentException("o.O connection needs to be cluster compatible " + getConnection());
+		}
+
+		if(StringUtils.hasText(node.getId())) {
+			return ((StatefulRedisClusterConnection) getConnection()).getConnection(node.getId()).reactive();
+		}
+
+		return  ((StatefulRedisClusterConnection) getConnection()).getConnection(node.getHost(), node.getPort()).reactive();
 	}
 }

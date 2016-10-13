@@ -177,4 +177,7 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 		connection.close();
 	}
 
+	protected StatefulConnection<byte[], byte[]> getConnection() {
+		return connection;
+	}
 }

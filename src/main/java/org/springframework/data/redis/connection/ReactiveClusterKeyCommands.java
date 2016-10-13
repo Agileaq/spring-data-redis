@@ -32,10 +32,32 @@
 
 package org.springframework.data.redis.connection;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
+import reactor.core.publisher.Mono;
+
 /**
  * @author Christoph Strobl
- * @since 2016/10
+ * @since 2.0
  */
 public interface ReactiveClusterKeyCommands extends ReactiveKeyCommands {
+
+	/**
+	 * Retrieve all {@literal keys} for a given {@literal pattern} from {@link RedisNode}.
+	 *
+	 * @param node must not be {@literal null}.
+	 * @param pattern must not be {@literal null}.
+	 * @return
+	 */
+	Mono<List<ByteBuffer>> keys(RedisClusterNode node, ByteBuffer pattern);
+
+	/**
+	 * Retrieve a random {@literal key} from {@link RedisNode}.
+	 *
+	 * @param node must not be {@literal null}.
+	 * @return
+	 */
+	Mono<ByteBuffer> randomKey(RedisClusterNode node);
 
 }

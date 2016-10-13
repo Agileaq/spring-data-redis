@@ -45,8 +45,6 @@ import org.springframework.data.redis.test.util.LettuceRedisClusterClientProvide
 @RunWith(Parameterized.class)
 public class LettuceReactiveCommandsTestsBase {
 
-	// public static @ClassRule LettuceRedisClientProvider clientProvider = LettuceRedisClientProvider.local();
-
 	static final String KEY_1 = "key-1";
 	static final String KEY_2 = "key-2";
 	static final String KEY_3 = "key-3";
