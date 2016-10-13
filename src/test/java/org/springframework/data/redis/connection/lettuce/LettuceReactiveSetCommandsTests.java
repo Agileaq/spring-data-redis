@@ -111,6 +111,33 @@ public class LettuceReactiveSetCommandsTests extends LettuceReactiveCommandsTest
 	 * @see DATAREDIS-525
 	 */
 	@Test
+	public void sMoveShouldReturnFalseIfValueIsNotAMember() {
+
+		nativeCommands.sadd(KEY_1, VALUE_1, VALUE_2);
+		nativeCommands.sadd(KEY_2, VALUE_1);
+
+ 		assertThat(connection.setCommands().sMove(KEY_1_BBUFFER, KEY_2_BBUFFER, VALUE_3_BBUFFER).block(), is(false));
+		assertThat(nativeCommands.sismember(KEY_2, VALUE_3), is(false));
+	}
+
+	/**
+	 * @see DATAREDIS-525
+	 */
+	@Test
+	public void sMoveShouldReturnOperateCorrectlyWhenValueAlreadyPresentInTarget() {
+
+		nativeCommands.sadd(KEY_1, VALUE_1, VALUE_2, VALUE_3);
+		nativeCommands.sadd(KEY_2, VALUE_1, VALUE_3);
+
+		assertThat(connection.setCommands().sMove(KEY_1_BBUFFER, KEY_2_BBUFFER, VALUE_3_BBUFFER).block(), is(true));
+		assertThat(nativeCommands.sismember(KEY_1, VALUE_3), is(false));
+		assertThat(nativeCommands.sismember(KEY_2, VALUE_3), is(true));
+	}
+
+	/**
+	 * @see DATAREDIS-525
+	 */
+	@Test
 	public void sCardShouldCountValuesCorrectly() {
 
 		nativeCommands.sadd(KEY_1, VALUE_1, VALUE_2, VALUE_3);

@@ -34,7 +34,8 @@ import rx.Observable;
  * @author Christoph Strobl
  * @since 2.0
  */
-public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommands implements ReactiveClusterSetCommands {
+public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommands
+		implements ReactiveClusterSetCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveSetCommands}.
@@ -202,22 +203,29 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 				return super.sMove(Mono.just(command));
 			}
 
-			Observable<Boolean> result = cmd.exists(command.getKey().array()).flatMap(value -> value == 0 ? Observable.empty()
-					: cmd.sismember(command.getDestination().array(), command.getValue().array()).map(x -> !x))
+			Observable<Boolean> result = cmd.exists(command.getKey().array()).flatMap(nrKeys -> nrKeys == 0
+					? Observable.empty() : cmd.sismember(command.getKey().array(), command.getValue().array()))
+					.flatMap(exists -> {
 
-					.flatMap(move -> {
-
-						if (!move) {
-							return Observable.empty();
+						if (!exists) {
+							return Observable.just(Boolean.FALSE);
 						}
+						return cmd.sismember(command.getDestination().array(), command.getValue().array())
+								.flatMap(existsInTarget -> {
 
-						return cmd.srem(command.getKey().array(), command.getValue().array())
-								.flatMap(removed -> removed == 0 ? Observable.empty()
-										: cmd.sadd(command.getDestination().array(), command.getValue().array())
-												.map(LettuceConverters::toBoolean));
-					}).defaultIfEmpty(Boolean.FALSE);
+									Observable<Boolean> tmp = cmd.srem(command.getKey().array(), command.getValue().array())
+											.map(nrRemoved -> nrRemoved > 0);
+									if (!existsInTarget) {
+										return tmp
+												.flatMap(removed -> cmd.sadd(command.getDestination().array(), command.getValue().array())
+														.map(LettuceConverters::toBoolean));
+									}
+									return tmp;
+								});
 
-			return LettuceReactiveRedisConnection.<Boolean> monoConverter().convert(result)
+					});
+
+			return LettuceReactiveRedisConnection.<Boolean> monoConverter().convert(result.defaultIfEmpty(Boolean.FALSE))
 					.map(value -> new ReactiveRedisConnection.BooleanResponse<>(command, value));
 		}));
 	}
