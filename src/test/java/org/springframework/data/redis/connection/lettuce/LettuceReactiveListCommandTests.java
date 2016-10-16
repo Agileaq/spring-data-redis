@@ -271,7 +271,9 @@ public class LettuceReactiveListCommandTests extends LettuceReactiveCommandsTest
 	 * @see DATAREDIS-525
 	 */
 	@Test
-	public void blPopShouldReturnLastAvailable() {
+	public void brPopShouldReturnLastAvailable() {
+
+		assumeThat(clientProvider instanceof LettuceRedisClientProvider, is(true));
 
 		nativeCommands.rpush(KEY_1, VALUE_1, VALUE_2, VALUE_3);
 

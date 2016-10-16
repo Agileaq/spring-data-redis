@@ -19,9 +19,11 @@ package org.springframework.data.redis.connection.lettuce;
 import java.nio.ByteBuffer;
 
 import org.reactivestreams.Publisher;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
 import org.springframework.data.redis.connection.ReactiveClusterListCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
+import org.springframework.util.Assert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,9 +31,10 @@ import rx.Observable;
 
 /**
  * @author Christoph Strobl
- * @since 2016/10
+ * @since 2.0
  */
-public class LettuceReactiveClusterListCommands extends LettuceReactiveListCommands implements ReactiveClusterListCommands {
+public class LettuceReactiveClusterListCommands extends LettuceReactiveListCommands
+		implements ReactiveClusterListCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveListCommands}.
@@ -43,10 +46,29 @@ public class LettuceReactiveClusterListCommands extends LettuceReactiveListComma
 	}
 
 	@Override
+	public Flux<PopResponse> bPop(Publisher<BPopCommand> commands) {
+
+		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notNull(command.getKeys(), "Keys must not be null!");
+			Assert.notNull(command.getDirection(), "Direction must not be null!");
+
+			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKeys())) {
+				return super.bPop(Mono.just(command));
+			}
+
+			return Mono.error(new InvalidDataAccessApiUsageException("All keys must map to the same slot for BPOP command."));
+		}));
+	}
+
+	@Override
 	public Flux<ReactiveRedisConnection.ByteBufferResponse<RPopLPushCommand>> rPopLPush(
 			Publisher<RPopLPushCommand> commands) {
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notNull(command.getKey(), "Key must not be null!");
+			Assert.notNull(command.getDestination(), "Destination key must not be null!");
 
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKey(), command.getDestination())) {
 				return super.rPopLPush(Mono.just(command));

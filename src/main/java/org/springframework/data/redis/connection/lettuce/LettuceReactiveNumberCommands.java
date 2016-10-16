@@ -51,13 +51,13 @@ public class LettuceReactiveNumberCommands implements ReactiveNumberCommands {
 	@Override
 	public Flux<NumericResponse<KeyCommand, Long>> incr(Publisher<KeyCommand> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
-				return LettuceReactiveRedisConnection.<Long> monoConverter().convert(cmd.incr(command.getKey().array()))
-						.map(value -> new NumericResponse<>(command, value));
-			});
-		});
+			Assert.notNull(command.getKey(), "Key must not be null!");
+
+			return LettuceReactiveRedisConnection.<Long> monoConverter().convert(cmd.incr(command.getKey().array()))
+					.map(value -> new NumericResponse<>(command, value));
+		}));
 	}
 
 	/*
@@ -67,26 +67,24 @@ public class LettuceReactiveNumberCommands implements ReactiveNumberCommands {
 	@Override
 	public <T extends Number> Flux<NumericResponse<IncrByCommand<T>, T>> incrBy(Publisher<IncrByCommand<T>> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
+			Assert.notNull(command.getKey(), "Key must not be null!");
+			Assert.notNull(command.getValue(), "Value for INCRBY must not be null.");
 
-				T incrBy = command.getValue();
+			T incrBy = command.getValue();
 
-				Assert.notNull(incrBy, "Value for INCRBY must not be null.");
+			Observable<? extends Number> result = null;
+			if (incrBy instanceof Double || incrBy instanceof Float) {
+				result = cmd.incrbyfloat(command.getKey().array(), incrBy.doubleValue());
+			} else {
+				result = cmd.incrby(command.getKey().array(), incrBy.longValue());
+			}
 
-				Observable<? extends Number> result = null;
-				if (incrBy instanceof Double || incrBy instanceof Float) {
-					result = cmd.incrbyfloat(command.getKey().array(), incrBy.doubleValue());
-				} else {
-					result = cmd.incrby(command.getKey().array(), incrBy.longValue());
-				}
-
-				return LettuceReactiveRedisConnection.<T> monoConverter()
-						.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, incrBy.getClass())))
-						.map(res -> new NumericResponse<>(command, res));
-			});
-		});
+			return LettuceReactiveRedisConnection.<T> monoConverter()
+					.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, incrBy.getClass())))
+					.map(res -> new NumericResponse<>(command, res));
+		}));
 	}
 
 	/*
@@ -96,13 +94,13 @@ public class LettuceReactiveNumberCommands implements ReactiveNumberCommands {
 	@Override
 	public Flux<NumericResponse<KeyCommand, Long>> decr(Publisher<KeyCommand> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
-				return LettuceReactiveRedisConnection.<Long> monoConverter().convert(cmd.decr(command.getKey().array()))
-						.map(value -> new NumericResponse<>(command, value));
-			});
-		});
+			Assert.notNull(command.getKey(), "Key must not be null!");
+
+			return LettuceReactiveRedisConnection.<Long> monoConverter().convert(cmd.decr(command.getKey().array()))
+					.map(value -> new NumericResponse<>(command, value));
+		}));
 	}
 
 	/*
@@ -112,26 +110,25 @@ public class LettuceReactiveNumberCommands implements ReactiveNumberCommands {
 	@Override
 	public <T extends Number> Flux<NumericResponse<DecrByCommand<T>, T>> decrBy(Publisher<DecrByCommand<T>> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
+			Assert.notNull(command.getKey(), "Key must not be null!");
+			Assert.notNull(command.getValue(), "Value for DECRBY must not be null.");
 
-				T decrBy = command.getValue();
+			T decrBy = command.getValue();
 
-				Assert.notNull(decrBy, "Value for DECRBY must not be null.");
 
-				Observable<? extends Number> result = null;
-				if (decrBy instanceof Double || decrBy instanceof Float) {
-					result = cmd.incrbyfloat(command.getKey().array(), decrBy.doubleValue() * (-1.0D));
-				} else {
-					result = cmd.decrby(command.getKey().array(), decrBy.longValue());
-				}
+			Observable<? extends Number> result = null;
+			if (decrBy instanceof Double || decrBy instanceof Float) {
+				result = cmd.incrbyfloat(command.getKey().array(), decrBy.doubleValue() * (-1.0D));
+			} else {
+				result = cmd.decrby(command.getKey().array(), decrBy.longValue());
+			}
 
-				return LettuceReactiveRedisConnection.<T> monoConverter()
-						.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, decrBy.getClass())))
-						.map(res -> new NumericResponse<>(command, res));
-			});
-		});
+			return LettuceReactiveRedisConnection.<T> monoConverter()
+					.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, decrBy.getClass())))
+					.map(res -> new NumericResponse<>(command, res));
+		}));
 	}
 
 	/*
@@ -141,25 +138,25 @@ public class LettuceReactiveNumberCommands implements ReactiveNumberCommands {
 	@Override
 	public <T extends Number> Flux<NumericResponse<HIncrByCommand<T>, T>> hIncrBy(Publisher<HIncrByCommand<T>> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
+			Assert.notNull(command.getKey(), "Key must not be null!");
+			Assert.notNull(command.getValue(), "Value must not be null!");
 
-				T incrBy = command.getValue();
+			T incrBy = command.getValue();
 
-				Observable<? extends Number> result = null;
+			Observable<? extends Number> result = null;
 
-				if (incrBy instanceof Double || incrBy instanceof Float) {
-					result = cmd.hincrbyfloat(command.getKey().array(), command.getField().array(), incrBy.doubleValue());
-				} else {
-					result = cmd.hincrby(command.getKey().array(), command.getField().array(), incrBy.longValue());
-				}
+			if (incrBy instanceof Double || incrBy instanceof Float) {
+				result = cmd.hincrbyfloat(command.getKey().array(), command.getField().array(), incrBy.doubleValue());
+			} else {
+				result = cmd.hincrby(command.getKey().array(), command.getField().array(), incrBy.longValue());
+			}
 
-				return LettuceReactiveRedisConnection.<T> monoConverter()
-						.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, incrBy.getClass())))
-						.map(value -> new NumericResponse<>(command, value));
-			});
-		});
+			return LettuceReactiveRedisConnection.<T> monoConverter()
+					.convert(result.map(val -> NumberUtils.convertNumberToTargetClass(val, incrBy.getClass())))
+					.map(value -> new NumericResponse<>(command, value));
+		}));
 	}
 
 }

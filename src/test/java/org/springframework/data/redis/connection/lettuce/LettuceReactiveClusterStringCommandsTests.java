@@ -20,7 +20,6 @@ import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
-import static org.springframework.data.redis.connection.RedisClusterNode.*;
 import static org.springframework.data.redis.connection.lettuce.LettuceReactiveCommandsTestsBase.*;
 
 import java.nio.ByteBuffer;
@@ -32,7 +31,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
-import org.springframework.data.redis.connection.RedisClusterNode;
 import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.test.util.LettuceRedisClusterClientProvider;
 

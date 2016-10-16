@@ -25,6 +25,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
 import org.springframework.data.redis.connection.ReactiveClusterSetCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
+import org.springframework.util.Assert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -52,6 +53,8 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notNull(command.getKeys(), "Keys must not be null!");
+
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKeys())) {
 				return super.sUnion(Mono.just(command));
 			}
@@ -70,6 +73,9 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 			Publisher<SUnionStoreCommand> commands) {
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notNull(command.getKeys(), "Source keys must not be null!");
+			Assert.notNull(command.getKey(), "Destination key must not be null!");
 
 			List<ByteBuffer> keys = new ArrayList<>(command.getKeys());
 			keys.add(command.getKey());
@@ -92,6 +98,8 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 			Publisher<SInterCommand> commands) {
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notNull(command.getKeys(), "Keys must not be null!");
 
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKeys())) {
 				return super.sInter(Mono.just(command));
@@ -124,6 +132,9 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notNull(command.getKeys(), "Source keys must not be null!");
+			Assert.notNull(command.getKey(), "Destination key must not be null!");
+
 			List<ByteBuffer> keys = new ArrayList<>(command.getKeys());
 			keys.add(command.getKey());
 
@@ -145,6 +156,8 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 			Publisher<SDiffCommand> commands) {
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notNull(command.getKeys(), "Keys must not be null!");
 
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKeys())) {
 				return super.sDiff(Mono.just(command));
@@ -178,6 +191,9 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notNull(command.getKeys(), "Source keys must not be null!");
+			Assert.notNull(command.getKey(), "Destination key must not be null!");
+
 			List<ByteBuffer> keys = new ArrayList<>(command.getKeys());
 			keys.add(command.getKey());
 
@@ -199,6 +215,9 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notNull(command.getKey(), "Source key must not be null!");
+			Assert.notNull(command.getDestination(), "Destination key must not be null!");
+
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getKey(), command.getDestination())) {
 				return super.sMove(Mono.just(command));
 			}
@@ -216,9 +235,8 @@ public class LettuceReactiveClusterSetCommands extends LettuceReactiveSetCommand
 									Observable<Boolean> tmp = cmd.srem(command.getKey().array(), command.getValue().array())
 											.map(nrRemoved -> nrRemoved > 0);
 									if (!existsInTarget) {
-										return tmp
-												.flatMap(removed -> cmd.sadd(command.getDestination().array(), command.getValue().array())
-														.map(LettuceConverters::toBoolean));
+										return tmp.flatMap(removed -> cmd.sadd(command.getDestination().array(), command.getValue().array())
+												.map(LettuceConverters::toBoolean));
 									}
 									return tmp;
 								});

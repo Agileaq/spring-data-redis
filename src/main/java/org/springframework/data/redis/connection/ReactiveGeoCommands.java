@@ -194,11 +194,11 @@ public interface ReactiveGeoCommands {
 			return new GeoDistCommand(key, from, to, metric);
 		}
 
-		public ByteBuffer from() {
+		public ByteBuffer getFrom() {
 			return from;
 		}
 
-		public ByteBuffer to() {
+		public ByteBuffer getTo() {
 			return to;
 		}
 

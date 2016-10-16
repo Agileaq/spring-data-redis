@@ -16,17 +16,16 @@
 
 package org.springframework.data.redis.connection.lettuce;
 
-import com.lambdaworks.redis.api.StatefulConnection;
-import com.lambdaworks.redis.api.StatefulRedisConnection;
+import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
+import org.springframework.data.redis.connection.RedisNode;
+import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
+
 import com.lambdaworks.redis.api.rx.RedisReactiveCommands;
+import com.lambdaworks.redis.cluster.RedisClusterClient;
 import com.lambdaworks.redis.cluster.api.StatefulRedisClusterConnection;
 import com.lambdaworks.redis.cluster.api.rx.RedisClusterReactiveCommands;
-import org.springframework.data.redis.connection.ReactiveRedisClusterConnection;
 
-import com.lambdaworks.redis.cluster.RedisClusterClient;
-import org.springframework.data.redis.connection.RedisNode;
-import org.springframework.util.ObjectUtils;
-import org.springframework.util.StringUtils;
 import reactor.core.publisher.Flux;
 
 /**
@@ -88,11 +87,11 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 	@Override
 	protected StatefulRedisClusterConnection<byte[], byte[]> getConnection() {
 
-		if(!(super.getConnection() instanceof StatefulRedisClusterConnection)) {
+		if (!(super.getConnection() instanceof StatefulRedisClusterConnection)) {
 			throw new IllegalArgumentException("o.O connection needs to be cluster compatible " + getConnection());
 		}
 
-		return (StatefulRedisClusterConnection)super.getConnection();
+		return (StatefulRedisClusterConnection) super.getConnection();
 	}
 
 	/**
@@ -101,11 +100,18 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 	 */
 	public <T> Flux<T> execute(RedisNode node, LettuceReactiveCallback<T> callback) {
 
+		try {
+			Assert.notNull(callback, "ReactiveCallback must not be null!");
+			Assert.notNull(node, "Node must not be null!");
+		} catch (IllegalArgumentException e) {
+			return Flux.error(e);
+		}
+
 		return Flux.defer(() -> callback.doWithCommands(getCommands(node))).onErrorResumeWith(translateExecption());
 	}
 
 	protected RedisClusterReactiveCommands<byte[], byte[]> getCommands() {
-		return  getConnection().reactive();
+		return getConnection().reactive();
 	}
 
 	protected RedisReactiveCommands<byte[], byte[]> getCommands(RedisNode node) {
@@ -114,10 +120,10 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 			throw new IllegalArgumentException("o.O connection needs to be cluster compatible " + getConnection());
 		}
 
-		if(StringUtils.hasText(node.getId())) {
+		if (StringUtils.hasText(node.getId())) {
 			return ((StatefulRedisClusterConnection) getConnection()).getConnection(node.getId()).reactive();
 		}
 
-		return  ((StatefulRedisClusterConnection) getConnection()).getConnection(node.getHost(), node.getPort()).reactive();
+		return ((StatefulRedisClusterConnection) getConnection()).getConnection(node.getHost(), node.getPort()).reactive();
 	}
 }
