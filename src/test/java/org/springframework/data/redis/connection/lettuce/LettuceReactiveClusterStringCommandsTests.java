@@ -46,8 +46,6 @@ public class LettuceReactiveClusterStringCommandsTests {
 
 	public static @ClassRule LettuceRedisClusterClientProvider clientProvider = LettuceRedisClusterClientProvider.local();
 
-	static final RedisClusterNode NODE_1 = newRedisClusterNode().listeningAt("127.0.0.1", 7379).build();
-
 	RedisClusterCommands<String, String> nativeCommands;
 	LettuceReactiveRedisClusterConnection connection;
 

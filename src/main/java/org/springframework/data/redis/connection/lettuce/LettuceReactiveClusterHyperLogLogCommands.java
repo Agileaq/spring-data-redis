@@ -25,6 +25,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
 import org.springframework.data.redis.connection.ReactiveClusterHyperLogLogCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
+import org.springframework.util.Assert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,7 +34,8 @@ import reactor.core.publisher.Mono;
  * @author Christoph Strobl
  * @since @since 2.0
  */
-public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHyperLogLogCommands implements ReactiveClusterHyperLogLogCommands {
+public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHyperLogLogCommands
+		implements ReactiveClusterHyperLogLogCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveHyperLogLogCommands}.
@@ -49,6 +51,9 @@ public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHy
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notNull(command.getKey(), "Key must not be null for PFMERGE");
+			Assert.notEmpty(command.getSourceKeys(), "Source keys must not be null or empty for PFMERGE!");
+
 			List<ByteBuffer> keys = new ArrayList<>(command.getSourceKeys());
 			keys.add(command.getKey());
 
@@ -57,7 +62,7 @@ public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHy
 			}
 
 			return Mono
-					.error(new InvalidDataAccessApiUsageException("All keys must map to same slot for pfmerge in cluster mode."));
+					.error(new InvalidDataAccessApiUsageException("All keys must map to same slot for PFMERGE in cluster mode."));
 		}));
 	}
 
@@ -67,13 +72,15 @@ public class LettuceReactiveClusterHyperLogLogCommands extends LettuceReactiveHy
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notEmpty(command.getKeys(), "Keys must be null or empty for PFCOUNT!");
+
 			if (ClusterSlotHashUtil
 					.isSameSlotForAllKeys(command.getKeys().toArray(new ByteBuffer[command.getKeys().size()]))) {
 				return super.pfCount(Mono.just(command));
 			}
 
 			return Mono
-					.error(new InvalidDataAccessApiUsageException("All keys must map to same slot for pfcount in cluster mode."));
+					.error(new InvalidDataAccessApiUsageException("All keys must map to same slot for PFCOUNT in cluster mode."));
 		}));
 	}
 }

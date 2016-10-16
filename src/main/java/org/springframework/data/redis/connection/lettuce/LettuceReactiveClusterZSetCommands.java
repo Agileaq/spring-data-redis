@@ -21,6 +21,7 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.redis.connection.ClusterSlotHashUtil;
 import org.springframework.data.redis.connection.ReactiveClusterZSetCommands;
 import org.springframework.data.redis.connection.ReactiveRedisConnection;
+import org.springframework.util.Assert;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -29,7 +30,8 @@ import reactor.core.publisher.Mono;
  * @author Christoph Strobl
  * @since @since 2.0
  */
-public class LettuceReactiveClusterZSetCommands extends LettuceReactiveZSetCommands implements ReactiveClusterZSetCommands {
+public class LettuceReactiveClusterZSetCommands extends LettuceReactiveZSetCommands
+		implements ReactiveClusterZSetCommands {
 
 	/**
 	 * Create new {@link LettuceReactiveSetCommands}.
@@ -46,6 +48,8 @@ public class LettuceReactiveClusterZSetCommands extends LettuceReactiveZSetComma
 
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
 
+			Assert.notEmpty(command.getSourceKeys(), "Source keys must not be null or empty.");
+
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getSourceKeys())) {
 				return super.zUnionStore(Mono.just(command));
 			}
@@ -59,6 +63,8 @@ public class LettuceReactiveClusterZSetCommands extends LettuceReactiveZSetComma
 	public Flux<ReactiveRedisConnection.NumericResponse<ZInterStoreCommand, Long>> zInterStore(
 			Publisher<ZInterStoreCommand> commands) {
 		return getConnection().execute(cmd -> Flux.from(commands).flatMap(command -> {
+
+			Assert.notEmpty(command.getSourceKeys(), "Source keys must not be null or empty.");
 
 			if (ClusterSlotHashUtil.isSameSlotForAllKeys(command.getSourceKeys())) {
 				return super.zInterStore(Mono.just(command));

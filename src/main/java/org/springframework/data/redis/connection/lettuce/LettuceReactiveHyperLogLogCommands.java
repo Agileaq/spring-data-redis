@@ -51,15 +51,16 @@ public class LettuceReactiveHyperLogLogCommands implements ReactiveHyperLogLogCo
 	@Override
 	public Flux<NumericResponse<PfAddCommand, Long>> pfAdd(Publisher<PfAddCommand> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
-				return LettuceReactiveRedisConnection.<Long> monoConverter()
-						.convert(cmd.pfadd(command.getKey().array(),
-								command.getValues().stream().map(ByteBuffer::array).toArray(size -> new byte[size][])))
-						.map(value -> new NumericResponse<>(command, value));
-			});
-		});
+			Assert.notNull(command.getKey(), "key must not be null!");
+
+			return LettuceReactiveRedisConnection.<Long> monoConverter()
+					.convert(cmd.pfadd(command.getKey().array(),
+							command.getValues().stream().map(ByteBuffer::array).toArray(size -> new byte[size][])))
+					.map(value -> new NumericResponse<>(command, value));
+
+		}));
 	}
 
 	/*
@@ -69,14 +70,14 @@ public class LettuceReactiveHyperLogLogCommands implements ReactiveHyperLogLogCo
 	@Override
 	public Flux<NumericResponse<PfCountCommand, Long>> pfCount(Publisher<PfCountCommand> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
-				return LettuceReactiveRedisConnection.<Long> monoConverter()
-						.convert(cmd.pfcount(command.getKeys().stream().map(ByteBuffer::array).toArray(size -> new byte[size][])))
-						.map(value -> new NumericResponse<>(command, value));
-			});
-		});
+			Assert.notEmpty(command.getKeys(), "Keys must not be empty for PFCOUNT.");
+
+			return LettuceReactiveRedisConnection.<Long> monoConverter()
+					.convert(cmd.pfcount(command.getKeys().stream().map(ByteBuffer::array).toArray(size -> new byte[size][])))
+					.map(value -> new NumericResponse<>(command, value));
+		}));
 	}
 
 	/*
@@ -86,17 +87,18 @@ public class LettuceReactiveHyperLogLogCommands implements ReactiveHyperLogLogCo
 	@Override
 	public Flux<BooleanResponse<PfMergeCommand>> pfMerge(Publisher<PfMergeCommand> commands) {
 
-		return connection.execute(cmd -> {
+		return connection.execute(cmd -> Flux.from(commands).flatMap(command -> {
 
-			return Flux.from(commands).flatMap(command -> {
-				return LettuceReactiveRedisConnection.<Boolean> monoConverter()
-						.convert(cmd
-								.pfmerge(command.getKey().array(),
-										command.getSourceKeys().stream().map(ByteBuffer::array).toArray(size -> new byte[size][]))
-								.map(LettuceConverters::stringToBoolean))
-						.map(value -> new BooleanResponse<>(command, value));
-			});
-		});
+			Assert.notNull(command.getKey(), "Destination key must not be null for PFMERGE.");
+			Assert.notEmpty(command.getSourceKeys(), "Source keys must not be null for PFMERGE.");
+
+			return LettuceReactiveRedisConnection.<Boolean> monoConverter()
+					.convert(cmd
+							.pfmerge(command.getKey().array(),
+									command.getSourceKeys().stream().map(ByteBuffer::array).toArray(size -> new byte[size][]))
+							.map(LettuceConverters::stringToBoolean))
+					.map(value -> new BooleanResponse<>(command, value));
+		}));
 	}
 
 	protected LettuceReactiveRedisConnection getConnection() {
