@@ -213,6 +213,15 @@ public class LettuceConnectionFactory implements InitializingBean, DisposableBea
 		return new LettuceReactiveRedisConnection(client);
 	}
 
+	@Override
+	public LettuceReactiveRedisClusterConnection getReactiveClusterConnection() {
+		if(!isClusterAware()) {
+			throw new InvalidDataAccessApiUsageException("Cluster is not configured!");
+		}
+
+		return new LettuceReactiveRedisClusterConnection((RedisClusterClient)client);
+	}
+
 	public void initConnection() {
 
 		synchronized (this.connectionMonitor) {

@@ -69,16 +69,8 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 		} else if (client instanceof RedisClusterClient) {
 			connection = ((RedisClusterClient) client).connect(CODEC);
 		} else {
-			throw new InvalidDataAccessResourceUsageException("Cannot use client of type " + client.getClass());
+			throw new InvalidDataAccessResourceUsageException(String.format("Cannot use client of type %s", client.getClass()));
 		}
-	}
-
-	/**
-	 * @param callback
-	 * @return
-	 */
-	public <T> Flux<T> execute(LettuceReactiveCallback<T> callback) {
-		return Flux.defer(() -> callback.doWithCommands(getCommands())).onErrorResumeWith(translateExecption());
 	}
 
 	/*
@@ -130,6 +122,23 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 		return new LettuceReactiveHyperLogLogCommands(this);
 	}
 
+	/**
+	 * @param callback
+	 * @return
+	 */
+	public <T> Flux<T> execute(LettuceReactiveCallback<T> callback) {
+		return Flux.defer(() -> callback.doWithCommands(getCommands())).onErrorResumeWith(translateExeception());
+	}
+
+	@Override
+	public void close() {
+		connection.close();
+	}
+
+	protected StatefulConnection<byte[], byte[]> getConnection() {
+		return connection;
+	}
+
 	protected RedisClusterReactiveCommands<byte[], byte[]> getCommands() {
 
 		if (connection instanceof StatefulRedisConnection) {
@@ -141,7 +150,7 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 		throw new RuntimeException("o.O unknown connection type " + connection);
 	}
 
-	<T> Function<Throwable, Publisher<? extends T>> translateExecption() {
+	<T> Function<Throwable, Publisher<? extends T>> translateExeception() {
 
 		return throwable -> {
 
@@ -160,7 +169,7 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 
 	/**
 	 * just a typed converter to avoid a lot of casting since {@link ObservableToMonoConverter} is untyped.
-	 * 
+	 *
 	 * @return
 	 */
 	static <T> Converter<Observable<?>, Mono<T>> monoConverter() {
@@ -170,14 +179,5 @@ public class LettuceReactiveRedisConnection implements ReactiveRedisConnection {
 
 	interface LettuceReactiveCallback<T> {
 		Publisher<T> doWithCommands(RedisClusterReactiveCommands<byte[], byte[]> cmd);
-	}
-
-	@Override
-	public void close() {
-		connection.close();
-	}
-
-	protected StatefulConnection<byte[], byte[]> getConnection() {
-		return connection;
 	}
 }

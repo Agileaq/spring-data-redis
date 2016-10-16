@@ -84,16 +84,6 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 		return new LettuceReactiveClusterNumberCommands(this);
 	}
 
-	@Override
-	protected StatefulRedisClusterConnection<byte[], byte[]> getConnection() {
-
-		if (!(super.getConnection() instanceof StatefulRedisClusterConnection)) {
-			throw new IllegalArgumentException("o.O connection needs to be cluster compatible " + getConnection());
-		}
-
-		return (StatefulRedisClusterConnection) super.getConnection();
-	}
-
 	/**
 	 * @param callback
 	 * @return
@@ -107,7 +97,16 @@ public class LettuceReactiveRedisClusterConnection extends LettuceReactiveRedisC
 			return Flux.error(e);
 		}
 
-		return Flux.defer(() -> callback.doWithCommands(getCommands(node))).onErrorResumeWith(translateExecption());
+		return Flux.defer(() -> callback.doWithCommands(getCommands(node))).onErrorResumeWith(translateExeception());
+	}
+
+	@Override
+	protected StatefulRedisClusterConnection<byte[], byte[]> getConnection() {
+
+		Assert.isInstanceOf(StatefulRedisClusterConnection.class, super.getConnection(),
+				"Connection needs to be instance of StatefulRedisClusterConnection");
+
+		return (StatefulRedisClusterConnection) super.getConnection();
 	}
 
 	protected RedisClusterReactiveCommands<byte[], byte[]> getCommands() {
