@@ -34,46 +34,16 @@ package org.springframework.data.redis.connection.lettuce;
 
 import static org.hamcrest.core.Is.*;
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
-import static org.springframework.data.redis.connection.RedisClusterNode.*;
 import static org.springframework.data.redis.connection.lettuce.LettuceReactiveCommandsTestsBase.*;
 
 import java.util.Arrays;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
-import org.springframework.data.redis.connection.RedisClusterNode;
-import org.springframework.data.redis.test.util.LettuceRedisClusterClientProvider;
-
-import com.lambdaworks.redis.cluster.api.sync.RedisClusterCommands;
 
 /**
  * @author Christoph Strobl
  */
-public class LettuceReactiveClusterHyperLogLogCommandsTests {
-
-	public static @ClassRule LettuceRedisClusterClientProvider clientProvider = LettuceRedisClusterClientProvider.local();
-
-	RedisClusterCommands<String, String> nativeCommands;
-	LettuceReactiveRedisClusterConnection connection;
-
-	@Before
-	public void before() {
-		assumeThat(clientProvider.test(), is(true));
-		nativeCommands = clientProvider.getClient().connect().sync();
-		connection = new LettuceReactiveRedisClusterConnection(clientProvider.getClient());
-	}
-
-	@After
-	public void tearDown() {
-
-		nativeCommands.flushall();
-		nativeCommands.close();
-
-		connection.close();
-	}
+public class LettuceReactiveClusterHyperLogLogCommandsTests extends LettuceReactiveClusterCommandsTestsBase {
 
 	/**
 	 * @see DATAREDIS-525

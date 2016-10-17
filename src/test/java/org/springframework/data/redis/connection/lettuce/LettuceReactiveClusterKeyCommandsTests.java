@@ -21,51 +21,23 @@ import static org.hamcrest.collection.IsIterableContainingInOrder.*;
 import static org.hamcrest.core.Is.*;
 import static org.hamcrest.core.IsEqual.*;
 import static org.junit.Assert.*;
-import static org.junit.Assume.*;
 import static org.springframework.data.redis.connection.RedisClusterNode.*;
 import static org.springframework.data.redis.connection.lettuce.LettuceReactiveCommandsTestsBase.*;
 
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Test;
 import org.springframework.data.redis.connection.RedisClusterNode;
-import org.springframework.data.redis.test.util.LettuceRedisClusterClientProvider;
-
-import com.lambdaworks.redis.cluster.api.sync.RedisClusterCommands;
 
 import reactor.core.publisher.Mono;
 
 /**
  * @author Christoph Strobl
  */
-public class LettuceReactiveClusterKeyCommandsTests {
-
-	public static @ClassRule LettuceRedisClusterClientProvider clientProvider = LettuceRedisClusterClientProvider.local();
+public class LettuceReactiveClusterKeyCommandsTests extends LettuceReactiveClusterCommandsTestsBase {
 
 	static final RedisClusterNode NODE_1 = newRedisClusterNode().listeningAt("127.0.0.1", 7379).build();
-
-	RedisClusterCommands<String, String> nativeCommands;
-	LettuceReactiveRedisClusterConnection connection;
-
-	@Before
-	public void before() {
-		assumeThat(clientProvider.test(), is(true));
-		nativeCommands = clientProvider.getClient().connect().sync();
-		connection = new LettuceReactiveRedisClusterConnection(clientProvider.getClient());
-	}
-
-	@After
-	public void tearDown() {
-
-		nativeCommands.flushall();
-		nativeCommands.close();
-
-		connection.close();
-	}
 
 	/**
 	 * @see DATAREDIS-525
